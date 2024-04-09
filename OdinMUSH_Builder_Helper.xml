@@ -90,10 +90,10 @@ room_count = tonumber(GetVariable("room_count")) + 1
 current_area = GetVariable("current_area")
 current_room = GetVariable("current_room")
 dir = GetVariable("dir")
-print("Current Room: " .. current_room)
-print("Room_Count: " .. room_count)
-print("redit create " .. current_area .. "-" .. room_count)
-print(dir .. " " .. current_area .. "-" .. room_count)
+--print("Current Room: " .. current_room)
+--print("Room_Count: " .. room_count)
+--print("redit create " .. current_area .. "-" .. room_count)
+--print(dir .. " " .. current_area .. "-" .. room_count)
    Execute("redit create " .. current_area .. "-" .. room_count)
    Execute("e")
    Execute("b")
@@ -120,8 +120,8 @@ current_area = GetTriggerWildcard("room_info", "area") or nil
 current_room = GetTriggerWildcard("room_info", "current_room") or nil
 SetVariable("current_area", current_area)
 SetVariable("current_room", current_room)
-print("current_area: " .. current_area)
-print("current_room: " .. current_room)
+--print("current_area: " .. current_area)
+--print("current_room: " .. current_room)
 </send>
 </trigger>
 
@@ -138,17 +138,16 @@ print("current_room: " .. current_room)
   enabled="y"
   send_to="12"
   regexp="n"
-  sequence="100"
->
+  sequence="100">
   <send>
     dir = tostring("%1")
-    if dir ~= nil then
+    if opposites[dir] ~= nil then
       opposite = opposites[dir]
       SetVariable("dir", opposite)
       EnableTrigger("room_create", true)
       Execute("RLIST")
     else
-      utilprint("@x238[@RDE@x202MO@x208NB@x214UI@x220L@x228D@x238] @R[@YERROR@R] @wSomething wrong happened while setting the @Rexit direction@w.. Please report this to Demon. @R[@YERROR@R]")
+      utilprint("@x238[@RDE@x202MO@x208NB@x214UI@x220L@x228D@x238] @R[@YERROR@R] @wInvalid direction. Please use either n, s, e, w, u, d, or the longer forms. @R[@YERROR@R]")
     end
   </send>
 </alias>
@@ -210,7 +209,13 @@ opposites = {
   ["se"] = "nw",
   ["sw"] = "ne",
   ["u"] = "d",
-  ["d"] = "u"
+  ["d"] = "u",
+  ["north"] = "south",
+  ["south"] = "north",
+  ["east"] = "west",
+  ["west"] = "east",
+  ["up"] = "down",
+  ["down"] = "up"
 }
 
 function utilprint(string)
