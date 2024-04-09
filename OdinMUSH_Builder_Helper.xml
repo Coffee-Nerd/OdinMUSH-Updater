@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="OdinMUSH_Builder_Helper"
+   author="Demon"
+   id="a3a5abf8ec2ec2d2e3600634"
+   language="Lua"
+   purpose="makes building easier"
+   save_state="y"
+   date_written="2016-09-20 14:51:44"
+   requires="4.00"
+   version="1.1"
+   >
+<description trim="y">
+<![CDATA[
+Builder helper!!
+]]>
+</description>
+
+</plugin>
+
+
+<!--  Get our standard constants -->
+
+<include name="constants.lua"/>
+<triggers>
+<trigger
+name="room_list_start"
+match="^Displaying all rooms in '(.+)'$"
+enabled="n"
+regexp="y"
+send_to="12"
+sequence="100"
+omit_from_output="n"
+>
+<send>
+current_area = "%1"
+SetVariable("current_area", current_area)
+EnableTrigger("check_room_0", true)
+</send>
+</trigger>
+
+<trigger
+name="check_room_0"
+match="^\[(?P<current_area>\w+)-0\s*\]"
+enabled="n"
+regexp="y"
+send_to="12"
+sequence="99"
+omit_from_output="n"
+>
+<send>zero_found = true</send>
+</trigger>
+
+<trigger
+name="room_count"
+match="* rooms found"
+enabled="n"
+regexp="n"
+send_to="12"
+sequence="100"
+omit_from_output="n"
+>
+<send>
+room_count = %1
+if zero_found == true then
+    room_count = tonumber(room_count) - 1
+    EnableTrigger("check_room_0", false)
+end
+SetVariable("room_count", room_count)
+zero_found = false
+</send>
+</trigger>
+
+
+
+<trigger
+name="room_create"
+match="Use 'rlist sectors' to display data about sectors, color, and brightness."
+enabled="n"
+regexp="y"
+send_to="12"
+sequence="100"
+omit_from_output="n"
+>
+<send>
+room_count = tonumber(GetVariable("room_count")) + 1
+current_area = GetVariable("current_area")
+current_room = GetVariable("current_room")
+dir = GetVariable("dir")
+print("Current Room: " .. current_room)
+print("Room_Count: " .. room_count)
+print("redit create " .. current_area .. "-" .. room_count)
+print(dir .. " " .. current_area .. "-" .. room_count)
+   Execute("redit create " .. current_area .. "-" .. room_count)
+   Execute("e")
+   Execute("b")
+   Execute(dir.. " " .. current_area .. "-" .. current_room)
+   Execute("q")
+   Execute("q")
+   Execute("q")
+EnableTrigger("room_count", false)
+EnableTrigger("room_create", false)
+</send>
+</trigger>
+
+<trigger
+name="room_info"
+match="^\[(?P<area>\w+)-(?P<current_room>\d+)\|\d+\].*$"
+enabled="y"
+regexp="y"
+send_to="12"
+sequence="100"
+omit_from_output="n"
+>
+<send>
+current_area = GetTriggerWildcard("room_info", "area") or nil
+current_room = GetTriggerWildcard("room_info", "current_room") or nil
+SetVariable("current_area", current_area)
+SetVariable("current_room", current_room)
+print("current_area: " .. current_area)
+print("current_room: " .. current_room)
+</send>
+</trigger>
+
+</triggers>
+
+<!--  Plugin help  -->
+
+<aliases>
+
+
+<alias
+  name="set_exit"
+  match="set room exit *"
+  enabled="y"
+  send_to="12"
+  regexp="n"
+  sequence="100"
+>
+  <send>
+    dir = tostring("%1")
+    if dir ~= nil then
+      opposite = opposites[dir]
+      SetVariable("dir", opposite)
+      EnableTrigger("room_create", true)
+      Execute("RLIST")
+    else
+      utilprint("@x238[@RDE@x202MO@x208NB@x214UI@x220L@x228D@x238] @R[@YERROR@R] @wSomething wrong happened while setting the @Rexit direction@w.. Please report this to Demon. @R[@YERROR@R]")
+    end
+  </send>
+</alias>
+
+<alias
+  name="set_name"
+  match="^set room (name|short) (?P<name>.*)$"
+  enabled="y"
+  send_to="12"
+  regexp="y"
+  sequence="100"
+>
+  <send>
+    room_name = GetAliasWildcard("set_name", "name")
+    if room_name ~= nil and room_name ~= "" then
+      current_room = GetVariable("current_room")
+      current_area = GetVariable("current_area")
+      Execute("redit ".. current_area .. "-" .. current_room)
+      Execute("a")
+      Execute(room_name)
+      Execute("q")
+      Execute("q")
+    else
+      utilprint("@x238[@RDE@x202MO@x208NB@x214UI@x220L@x228D@x238] @R[@YERROR@R] @wSomething wrong happened while setting the @Rroom name@w.. Please report this to Demon. @R[@YERROR@R]")
+    end
+  </send>
+</alias>
+
+
+ <alias
+ match="RLIST"
+ enabled="y"
+ send_to="12"
+ sequence="99"
+>
+ <send>
+ Execute("Rlist")
+ EnableTrigger("room_count", true)
+ EnableTrigger("room_list_start", true)
+ </send>
+</alias>
+
+</aliases>
+
+<script>
+<![CDATA[
+
+current_room = GetVariable("current_room") or 0
+current_area = GetVariable("current_area") or 0 
+dofile(GetPluginInfo(GetPluginID(), 20) .. "odin_colors.lua")
+
+opposites = {
+  ["n"] = "s",
+  ["s"] = "n",
+  ["e"] = "w",
+  ["w"] = "e",
+  ["ne"] = "sw",
+  ["nw"] = "se",
+  ["se"] = "nw",
+  ["sw"] = "ne",
+  ["u"] = "d",
+  ["d"] = "u"
+}
+
+function utilprint(string)
+  AnsiNote(ColoursToANSI(string))
+end
+
+]]>
+</script> 
+
+</muclient>
